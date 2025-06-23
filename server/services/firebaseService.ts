@@ -2,7 +2,7 @@ import utils from "@strapi/utils";
 import { Strapi } from "@strapi/strapi";
 const { ValidationError } = utils.errors;
 import { processMeData } from "../utils/fetch-me";
-import { generateReferralCode } from "../utils";
+import { generateReferralCode, normalizeGmailAddress, generateGmailVariants } from "../utils";
 import { promiseHandler } from "../utils/promiseHandler";
 
 interface Params {
@@ -104,10 +104,16 @@ export default ({ strapi }: Params) => ({
 
 		// Check if email is available and construct query
 		if (decodedToken.email) {
-			query.$or.push({ email: decodedToken.email });
-			// Extend the query with appleEmail if that attribute exists in the userModel
-			if (userModel.hasOwnProperty("appleEmail")) {
-				query.$or.push({ appleEmail: decodedToken.email });
+			// Generate all possible Gmail variants to check for existing accounts
+			const emailVariants = generateGmailVariants(decodedToken.email);
+			
+			// Add all email variants to the query
+			for (const emailVariant of emailVariants) {
+				query.$or.push({ email: emailVariant });
+				// Extend the query with appleEmail if that attribute exists in the userModel
+				if (userModel.hasOwnProperty("appleEmail")) {
+					query.$or.push({ appleEmail: emailVariant });
+				}
 			}
 		}
 
@@ -168,7 +174,13 @@ export default ({ strapi }: Params) => ({
 		userPayload.firebaseUserID = decodedToken.uid;
 		userPayload.confirmed = true;
 
-		userPayload.email = decodedToken.email;
+		// Use normalized email for Gmail addresses to prevent duplicates
+		if (decodedToken.email) {
+			userPayload.email = normalizeGmailAddress(decodedToken.email);
+		} else {
+			userPayload.email = profileMetaData?.email || (await createFakeEmail());
+		}
+		
 		userPayload.phoneNumber = decodedToken.phone_number;
 		userPayload.idToken = idToken;
 		if (profileMetaData) {
@@ -178,14 +190,13 @@ export default ({ strapi }: Params) => ({
 		}
 
 		if (decodedToken.email) {
-			const emailComponents = decodedToken.email.split("@");
+			const emailComponents = userPayload.email.split("@");
 			userPayload.username = emailComponents[0];
 			if (emailComponents[1].includes("privaterelay.appleid.com")) {
-				userPayload.appleEmail = decodedToken.email;
+				userPayload.appleEmail = userPayload.email;
 			}
 		} else {
 			userPayload.username = userPayload.phoneNumber;
-			userPayload.email = profileMetaData?.email || (await createFakeEmail());
 		}
 
 		return strapi

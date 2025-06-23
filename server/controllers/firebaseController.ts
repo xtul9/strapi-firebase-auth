@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const strapi: any;
+import { normalizeGmailAddress } from "../utils";
 
 const firebaseController = {
   index(ctx) {
@@ -24,7 +25,9 @@ const firebaseController = {
   },
 
   async deleteByEmail(email) {
-    const user = await strapi.firebase.auth().getUserByEmail(email);
+    // Normalize Gmail address before searching
+    const normalizedEmail = normalizeGmailAddress(email);
+    const user = await strapi.firebase.auth().getUserByEmail(normalizedEmail);
     await strapi
       .plugin("firebase-auth")
       .service("firebaseService")
