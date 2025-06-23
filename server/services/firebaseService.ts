@@ -122,10 +122,22 @@ export default ({ strapi }: Params) => ({
 			query.$or.push({ phoneNumber: decodedToken.phone_number });
 		}
 
-		// Execute a single database query with constructed conditions
-		dbUser = await strapi.db.query("plugin::users-permissions.user").findOne({
+		// Execute a query to find ALL matching users (not just the first one)
+		const matchingUsers = await strapi.db.query("plugin::users-permissions.user").findMany({
 			where: query,
+			orderBy: { createdAt: 'asc' }, // Order by creation date to get the oldest first
 		});
+
+		// If multiple users found, log a warning and return the oldest one
+		if (matchingUsers.length > 1) {
+			console.warn(`Multiple Gmail accounts found for email variants of ${decodedToken.email}:`, 
+				matchingUsers.map(u => ({ id: u.id, email: u.email, createdAt: u.createdAt }))
+			);
+			console.warn(`Using the oldest account (ID: ${matchingUsers[0].id}, Email: ${matchingUsers[0].email})`);
+		}
+
+		// Return the first (oldest) user or null if not found
+		dbUser = matchingUsers.length > 0 ? matchingUsers[0] : null;
 
 		// Return user or null if not found
 		return dbUser;

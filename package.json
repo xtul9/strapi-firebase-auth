@@ -1,6 +1,6 @@
 {
   "name": "strapi-plugin-firebase-auth-xtul9",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "This is a Strapi plugin connect and authenticate users using firebase",
   "strapi": {
     "name": "firebase-auth",
