@@ -159,6 +159,15 @@ export default ({ strapi }: Params) => ({
     return dbUser;
   },
 
+  ensureFirebaseUserID: async (user, decodedToken) => {
+    if (!user.firebaseUserID && decodedToken.uid) {
+      await strapi.db.query("plugin::users-permissions.user").update({
+        where: { id: user.id },
+        data: { firebaseUserID: decodedToken.uid },
+      });
+    }
+  },
+
   fetchUser: async (decodedToken) => {
     const { data: user, error } = await promiseHandler(
       strapi.db.query("plugin::users-permissions.user").findOne({
@@ -277,6 +286,11 @@ export default ({ strapi }: Params) => ({
         .plugin("firebase-auth")
         .service("firebaseService")
         .createStrapiUser(decodedToken, idToken, profileMetaData);
+    } else {
+      await strapi
+        .plugin("firebase-auth")
+        .service("firebaseService")
+        .ensureFirebaseUserID(user, decodedToken);
     }
 
     jwt = await strapi
