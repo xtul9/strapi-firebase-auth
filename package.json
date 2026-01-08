@@ -1,6 +1,6 @@
 {
   "name": "@xtul9/strapi-plugin-firebase-auth",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "This is a Strapi plugin connect and authenticate users using firebase",
   "strapi": {
     "name": "firebase-auth",
@@ -37,6 +37,7 @@
     "@strapi/typescript-utils": "^4.6.0",
     "@types/koa": "^2.13.8",
     "@types/lodash": "^4.14.197",
+    "@types/minimatch": "^5.1.2",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
     "copyfiles": "^2.4.1",

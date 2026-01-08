@@ -33,6 +33,12 @@ function main() {
     `${sourceDirectory}/.npmignore`,
     `${destinationDirectory}/.npmignore`,
   );
+
+  const npmrcSource = `${sourceDirectory}/.npmrc`;
+  const npmrcDest = `${destinationDirectory}/.npmrc`;
+  if (fs.existsSync(npmrcSource)) {
+    fs.copyFileSync(npmrcSource, npmrcDest);
+  }
 }
 
 main();
