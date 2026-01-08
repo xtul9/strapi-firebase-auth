@@ -210,6 +210,7 @@ export default ({ strapi }: Params) => ({
     userPayload.role = role.id;
     userPayload.firebaseUserID = decodedToken.uid;
     userPayload.confirmed = true;
+    userPayload.emailVerified = decodedToken.email_verified || false;
 
     // Use normalized email for Gmail addresses to prevent duplicates
     if (decodedToken.email) {
@@ -298,7 +299,7 @@ export default ({ strapi }: Params) => ({
       .service("firebaseService")
       .generateJWTForCurrentUser(user);
 
-    strapi
+    await strapi
       .plugin("firebase-auth")
       .service("firebaseService")
       .updateUserIDToken(user, idToken, decodedToken);
